@@ -7,12 +7,11 @@ spec:
   selector:
     app: train-schedule
   ports:
-  - protocol: TCP
-    port: 8080
-    nodePort: 8080
+    - protocol: TCP
+      port: 8080
+      nodePort: 8080
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,14 +29,37 @@ spec:
         app: train-schedule
     spec:
       containers:
-      - name: train-schedule
-        image: linuxacademycontent/train-schedule:autoscaling
-        ports:
-        - containerPort: 8080
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 15
-          timeoutSeconds: 1
-          periodSeconds: 10
+        - name: train-schedule
+          image: linuxacademycontent/train-schedule:autoscaling
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: train-schedule-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: train-schedule-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resources:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
