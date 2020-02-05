@@ -58,7 +58,7 @@ spec:
   maxReplicas: 4
   metrics:
     - type: Resource
-      resources:
+      resource:
         name: cpu
         target:
           type: Utilization
